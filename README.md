@@ -1,15 +1,18 @@
-# adviewbd-site
-LANDING PAGE FOR Adview BD - EARN MONEY BY WATCHING ADS
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AdView BD</title>
   <style>
     body {
       font-family: sans-serif;
       padding: 20px;
       background: #f9f9f9;
+      margin: 0;
+      position: relative;
+      min-height: 100vh;
     }
     .lang-toggle {
       position: absolute;
@@ -21,6 +24,14 @@ LANDING PAGE FOR Adview BD - EARN MONEY BY WATCHING ADS
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      font-size: 16px;
+      user-select: none;
+    }
+    #english, #bangla {
+      max-width: 600px;
+      margin: 80px auto 0 auto;
+      text-align: center;
+      line-height: 1.6;
     }
   </style>
 </head>
@@ -29,21 +40,20 @@ LANDING PAGE FOR Adview BD - EARN MONEY BY WATCHING ADS
   <!-- Language Toggle Button -->
   <button class="lang-toggle" onclick="toggleLanguage()">বাংলা</button>
 
-  <!-- English Section -->
+  <!-- English Content -->
   <div id="english">
     <h1>Welcome to AdView BD</h1>
     <p>Earn money by watching ads, referring friends, and completing tasks!</p>
     <p>Withdraw your earnings through bKash or Nagad.</p>
   </div>
 
-  <!-- Bangla Section -->
+  <!-- Bangla Content (hidden initially) -->
   <div id="bangla" style="display: none;">
     <h1>AdView BD-তে স্বাগতম</h1>
     <p>বিজ্ঞাপন দেখে, বন্ধুদের রেফার করে এবং ছোট ছোট কাজ করে আয় করুন!</p>
     <p>আপনার আয় বিকাশ বা নগদ এর মাধ্যমে তুলুন।</p>
   </div>
 
-  <!-- JavaScript -->
   <script>
     let isBangla = false;
     function toggleLanguage() {
