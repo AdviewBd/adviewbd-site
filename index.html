@@ -56,6 +56,7 @@
       padding: 8px;
       font-size: 1em;
       margin-top: 5px;
+      text-align: center;
     }
   </style>
 </head>
@@ -115,12 +116,15 @@
     let referrals = 0;
     function copyReferral() {
       const link = document.getElementById("refLink");
-      link.select();
-      link.setSelectionRange(0, 99999);
-      document.execCommand("copy");
-      alert("Referral link copied!");
-      referrals++;
-      document.getElementById("refCount").innerText = referrals;
+      navigator.clipboard.writeText(link.value)
+        .then(() => {
+          alert("Referral link copied!");
+          referrals++;
+          document.getElementById("refCount").innerText = referrals;
+        })
+        .catch(() => {
+          alert("Failed to copy referral link.");
+        });
     }
   </script>
 
