@@ -3,130 +3,135 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AdView BD</title>
+  <title>AdView BD - Register & Login</title>
   <style>
     body {
       font-family: sans-serif;
       padding: 20px;
       background: #f9f9f9;
-      margin: 0;
-      position: relative;
-      min-height: 100vh;
+      max-width: 400px;
+      margin: 40px auto;
     }
-    .lang-toggle {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      padding: 10px 15px;
-      background: #007bff;
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .form-section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    input[type="text"], input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0 15px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    button {
+      width: 100%;
+      background-color: #007bff;
       color: white;
+      padding: 10px;
       border: none;
       border-radius: 6px;
+      font-size: 1em;
       cursor: pointer;
-      font-size: 16px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .toggle-link {
+      text-align: center;
+      margin-top: 15px;
+      cursor: pointer;
+      color: #007bff;
       user-select: none;
     }
-    #english, #bangla {
-      max-width: 600px;
-      margin: 80px auto 0 auto;
+    .message {
       text-align: center;
-      line-height: 1.6;
-    }
-    .ads-section {
-      background: #fff;
-      margin: 40px auto;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      max-width: 400px;
-      text-align: center;
-    }
-    .ads-section button {
-      padding: 10px 20px;
-      font-size: 1em;
-      background-color: #28a745;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    input[type="text"] {
-      width: 90%;
-      padding: 8px;
-      font-size: 1em;
-      margin-top: 5px;
-      text-align: center;
+      margin-top: 15px;
+      color: green;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
 
-  <!-- Language Toggle Button -->
-  <button class="lang-toggle" onclick="toggleLanguage()">বাংলা</button>
-
-  <!-- English Content -->
-  <div id="english">
-    <h1>Welcome to AdView BD</h1>
-    <p>Earn money by watching ads, referring friends, and completing tasks!</p>
-    <p>Withdraw your earnings through bKash or Nagad.</p>
+  <!-- Registration Section -->
+  <div id="register-section" class="form-section">
+    <h2>Register</h2>
+    <input type="text" id="reg-name" placeholder="Full Name" />
+    <input type="email" id="reg-email" placeholder="Email" />
+    <input type="password" id="reg-password" placeholder="Password" />
+    <button onclick="register()">Register</button>
+    <div class="toggle-link" onclick="showLogin()">Already have an account? Login here</div>
+    <div id="reg-message" class="message"></div>
   </div>
 
-  <!-- Bangla Content (hidden initially) -->
-  <div id="bangla" style="display: none;">
-    <h1>AdView BD-তে স্বাগতম</h1>
-    <p>বিজ্ঞাপন দেখে, বন্ধুদের রেফার করে এবং ছোট ছোট কাজ করে আয় করুন!</p>
-    <p>আপনার আয় বিকাশ বা নগদ এর মাধ্যমে তুলুন।</p>
+  <!-- Login Section (hidden initially) -->
+  <div id="login-section" class="form-section" style="display:none;">
+    <h2>Login</h2>
+    <input type="email" id="login-email" placeholder="Email" />
+    <input type="password" id="login-password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+    <div class="toggle-link" onclick="showRegister()">Don't have an account? Register here</div>
+    <div id="login-message" class="message"></div>
   </div>
 
-  <!-- Watch Ads to Earn Section -->
-  <div class="ads-section">
-    <h2>💸 Watch Ads to Earn</h2>
-    <p style="font-size: 1.2em;">Your Earnings: <strong><span id="earnings">৳0.00</span></strong></p>
-    <button onclick="watchAd()">▶️ Watch Ad</button>
-  </div>
+<script>
+  function showRegister() {
+    document.getElementById('register-section').style.display = 'block';
+    document.getElementById('login-section').style.display = 'none';
+    clearMessages();
+  }
 
-  <!-- Referral System Section -->
-  <div class="ads-section">
-    <h2>👥 Invite Friends to Earn</h2>
-    <p>Your Referral Link:</p>
-    <input type="text" id="refLink" value="https://adviewbd.netlify.app/?ref=you" readonly />
-    <br />
-    <button onclick="copyReferral()">📋 Copy Link</button>
-    <p style="margin-top: 10px;">Referrals: <span id="refCount">0</span></p>
-  </div>
+  function showLogin() {
+    document.getElementById('register-section').style.display = 'none';
+    document.getElementById('login-section').style.display = 'block';
+    clearMessages();
+  }
 
-  <script>
-    let isBangla = false;
-    function toggleLanguage() {
-      isBangla = !isBangla;
-      document.getElementById('english').style.display = isBangla ? 'none' : 'block';
-      document.getElementById('bangla').style.display = isBangla ? 'block' : 'none';
-      document.querySelector('.lang-toggle').innerText = isBangla ? 'English' : 'বাংলা';
+  function clearMessages() {
+    document.getElementById('reg-message').innerText = '';
+    document.getElementById('login-message').innerText = '';
+  }
+
+  function register() {
+    const name = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value.trim();
+
+    if (!name || !email || !password) {
+      alert('Please fill all fields.');
+      return;
     }
+    // Dummy success action
+    document.getElementById('reg-message').innerText = 'Registration successful! You can now log in.';
+    // Optionally clear inputs
+    document.getElementById('reg-name').value = '';
+    document.getElementById('reg-email').value = '';
+    document.getElementById('reg-password').value = '';
+  }
 
-    // Earnings functionality
-    let earnings = 0;
-    function watchAd() {
-      earnings += 0.5;
-      document.getElementById('earnings').innerText = `৳${earnings.toFixed(2)}`;
-    }
+  function login() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim();
 
-    // Referral system functionality
-    let referrals = 0;
-    function copyReferral() {
-      const link = document.getElementById("refLink");
-      navigator.clipboard.writeText(link.value)
-        .then(() => {
-          alert("Referral link copied!");
-          referrals++;
-          document.getElementById("refCount").innerText = referrals;
-        })
-        .catch(() => {
-          alert("Failed to copy referral link.");
-        });
+    if (!email || !password) {
+      alert('Please fill all fields.');
+      return;
     }
-  </script>
+    // Dummy success action
+    document.getElementById('login-message').innerText = 'Login successful! Welcome back.';
+    // Optionally clear inputs
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-password').value = '';
+  }
+</script>
 
 </body>
 </html>
