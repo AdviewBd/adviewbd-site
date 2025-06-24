@@ -32,7 +32,6 @@
       text-align: center;
       line-height: 1.6;
     }
-
     .ads-section {
       background: #fff;
       margin: 40px auto;
@@ -42,7 +41,6 @@
       max-width: 400px;
       text-align: center;
     }
-
     .ads-section button {
       padding: 10px 20px;
       font-size: 1em;
@@ -52,6 +50,12 @@
       border-radius: 5px;
       cursor: pointer;
       margin-top: 10px;
+    }
+    input[type="text"] {
+      width: 90%;
+      padding: 8px;
+      font-size: 1em;
+      margin-top: 5px;
     }
   </style>
 </head>
@@ -81,6 +85,16 @@
     <button onclick="watchAd()">▶️ Watch Ad</button>
   </div>
 
+  <!-- Referral System Section -->
+  <div class="ads-section">
+    <h2>👥 Invite Friends to Earn</h2>
+    <p>Your Referral Link:</p>
+    <input type="text" id="refLink" value="https://adviewbd.netlify.app/?ref=you" readonly />
+    <br />
+    <button onclick="copyReferral()">📋 Copy Link</button>
+    <p style="margin-top: 10px;">Referrals: <span id="refCount">0</span></p>
+  </div>
+
   <script>
     let isBangla = false;
     function toggleLanguage() {
@@ -90,11 +104,23 @@
       document.querySelector('.lang-toggle').innerText = isBangla ? 'English' : 'বাংলা';
     }
 
-    // Ad watching functionality
+    // Earnings functionality
     let earnings = 0;
     function watchAd() {
       earnings += 0.5;
       document.getElementById('earnings').innerText = `৳${earnings.toFixed(2)}`;
+    }
+
+    // Referral system functionality
+    let referrals = 0;
+    function copyReferral() {
+      const link = document.getElementById("refLink");
+      link.select();
+      link.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+      alert("Referral link copied!");
+      referrals++;
+      document.getElementById("refCount").innerText = referrals;
     }
   </script>
 
