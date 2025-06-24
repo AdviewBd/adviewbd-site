@@ -23,7 +23,7 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       margin-bottom: 20px;
     }
-    input[type="text"], input[type="email"], input[type="password"] {
+    input[type="text"], input[type="email"], input[type="password"], input[type="number"] {
       width: 100%;
       padding: 10px;
       margin: 8px 0 15px 0;
@@ -67,9 +67,18 @@
     <input type="text" id="reg-name" placeholder="Full Name" />
     <input type="email" id="reg-email" placeholder="Email" />
     <input type="password" id="reg-password" placeholder="Password" />
-    <button onclick="register()">Register</button>
+    <button onclick="startVerification()">Register</button>
     <div class="toggle-link" onclick="showLogin()">Already have an account? Login here</div>
     <div id="reg-message" class="message"></div>
+  </div>
+
+  <!-- Verification Code Section (hidden initially) -->
+  <div id="verification-section" class="form-section" style="display:none;">
+    <h2>Email Verification</h2>
+    <p>We sent a verification code to your email. Please enter it below:</p>
+    <input type="number" id="verification-code" placeholder="Enter verification code" />
+    <button onclick="verifyCode()">Verify</button>
+    <div id="verify-message" class="message"></div>
   </div>
 
   <!-- Login Section (hidden initially) -->
@@ -83,38 +92,72 @@
   </div>
 
 <script>
+  let verificationCode = null;
+  let userEmail = '';
+
   function showRegister() {
     document.getElementById('register-section').style.display = 'block';
     document.getElementById('login-section').style.display = 'none';
+    document.getElementById('verification-section').style.display = 'none';
     clearMessages();
   }
 
   function showLogin() {
     document.getElementById('register-section').style.display = 'none';
     document.getElementById('login-section').style.display = 'block';
+    document.getElementById('verification-section').style.display = 'none';
     clearMessages();
   }
 
   function clearMessages() {
     document.getElementById('reg-message').innerText = '';
     document.getElementById('login-message').innerText = '';
+    document.getElementById('verify-message').innerText = '';
   }
 
-  function register() {
+  function startVerification() {
     const name = document.getElementById('reg-name').value.trim();
-    const email = document.getElementById('reg-email').value.trim();
+    userEmail = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value.trim();
 
-    if (!name || !email || !password) {
+    if (!name || !userEmail || !password) {
       alert('Please fill all fields.');
       return;
     }
-    // Dummy success action
-    document.getElementById('reg-message').innerText = 'Registration successful! You can now log in.';
-    // Optionally clear inputs
-    document.getElementById('reg-name').value = '';
-    document.getElementById('reg-email').value = '';
-    document.getElementById('reg-password').value = '';
+
+    // Simulate sending email verification code
+    verificationCode = Math.floor(100000 + Math.random() * 900000); // 6-digit code
+    alert(`Verification code sent to ${userEmail}: ${verificationCode}`);
+
+    // Hide register, show verification input
+    document.getElementById('register-section').style.display = 'none';
+    document.getElementById('verification-section').style.display = 'block';
+    clearMessages();
+  }
+
+  function verifyCode() {
+    const enteredCode = document.getElementById('verification-code').value.trim();
+
+    if (enteredCode === '') {
+      alert('Please enter the verification code.');
+      return;
+    }
+
+    if (enteredCode == verificationCode) {
+      document.getElementById('verify-message').innerText = 'Email verified successfully! You can now log in.';
+      // Reset form inputs
+      document.getElementById('reg-name').value = '';
+      document.getElementById('reg-email').value = '';
+      document.getElementById('reg-password').value = '';
+      document.getElementById('verification-code').value = '';
+
+      // Show login section after short delay
+      setTimeout(() => {
+        showLogin();
+      }, 2000);
+    } else {
+      document.getElementById('verify-message').innerText = 'Incorrect code. Please try again.';
+    }
   }
 
   function login() {
@@ -125,9 +168,9 @@
       alert('Please fill all fields.');
       return;
     }
+
     // Dummy success action
     document.getElementById('login-message').innerText = 'Login successful! Welcome back.';
-    // Optionally clear inputs
     document.getElementById('login-email').value = '';
     document.getElementById('login-password').value = '';
   }
