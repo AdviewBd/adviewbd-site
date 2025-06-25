@@ -54,8 +54,13 @@
     .message {
       text-align: center;
       margin-top: 15px;
-      color: green;
       font-weight: bold;
+    }
+    .message.success {
+      color: green;
+    }
+    .message.error {
+      color: red;
     }
   </style>
 </head>
@@ -64,9 +69,9 @@
   <!-- Registration Section -->
   <div id="register-section" class="form-section">
     <h2>Register</h2>
-    <input type="text" id="reg-name" placeholder="Full Name" />
-    <input type="email" id="reg-email" placeholder="Email" />
-    <input type="password" id="reg-password" placeholder="Password" />
+    <input type="text" id="reg-name" placeholder="Full Name" required />
+    <input type="email" id="reg-email" placeholder="Email" required />
+    <input type="password" id="reg-password" placeholder="Password (min 6 chars)" minlength="6" required />
     <button onclick="startVerification()">Register</button>
     <div class="toggle-link" onclick="showLogin()">Already have an account? Login here</div>
     <div id="reg-message" class="message"></div>
@@ -75,17 +80,17 @@
   <!-- Verification Code Section (hidden initially) -->
   <div id="verification-section" class="form-section" style="display:none;">
     <h2>Email Verification</h2>
-    <p>We sent a verification code to your email. Please enter it below:</p>
-    <input type="number" id="verification-code" placeholder="Enter verification code" />
-    <button onclick="verifyCode()">Verify</button>
+    <p>A verification code has been sent to your email.</p>
+    <input type="number" id="verification-code" placeholder="Enter verification code" required />
+    <button id="verify-button" onclick="verifyCode()">Verify</button>
     <div id="verify-message" class="message"></div>
   </div>
 
   <!-- Login Section (hidden initially) -->
   <div id="login-section" class="form-section" style="display:none;">
     <h2>Login</h2>
-    <input type="email" id="login-email" placeholder="Email" />
-    <input type="password" id="login-password" placeholder="Password" />
+    <input type="email" id="login-email" placeholder="Email" required />
+    <input type="password" id="login-password" placeholder="Password" required />
     <button onclick="login()">Login</button>
     <div class="toggle-link" onclick="showRegister()">Don't have an account? Register here</div>
     <div id="login-message" class="message"></div>
@@ -113,6 +118,9 @@
     document.getElementById('reg-message').innerText = '';
     document.getElementById('login-message').innerText = '';
     document.getElementById('verify-message').innerText = '';
+    document.getElementById('reg-message').className = 'message';
+    document.getElementById('login-message').className = 'message';
+    document.getElementById('verify-message').className = 'message';
   }
 
   function startVerification() {
@@ -121,15 +129,21 @@
     const password = document.getElementById('reg-password').value.trim();
 
     if (!name || !userEmail || !password) {
-      alert('Please fill all fields.');
+      document.getElementById('reg-message').innerText = 'Please fill all fields.';
+      document.getElementById('reg-message').className = 'message error';
       return;
     }
 
-    // Simulate sending email verification code
-    verificationCode = Math.floor(100000 + Math.random() * 900000); // 6-digit code
-    alert(`Verification code sent to ${userEmail}: ${verificationCode}`);
+    if (password.length < 6) {
+      document.getElementById('reg-message').innerText = 'Password must be at least 6 characters.';
+      document.getElementById('reg-message').className = 'message error';
+      return;
+    }
 
-    // Hide register, show verification input
+    // Simulate sending verification code
+    verificationCode = Math.floor(100000 + Math.random() * 900000); // 6-digit code
+    console.log("Verification code sent to " + userEmail + ": " + verificationCode);
+
     document.getElementById('register-section').style.display = 'none';
     document.getElementById('verification-section').style.display = 'block';
     clearMessages();
@@ -139,24 +153,29 @@
     const enteredCode = document.getElementById('verification-code').value.trim();
 
     if (enteredCode === '') {
-      alert('Please enter the verification code.');
+      document.getElementById('verify-message').innerText = 'Please enter the verification code.';
+      document.getElementById('verify-message').className = 'message error';
       return;
     }
 
     if (enteredCode == verificationCode) {
       document.getElementById('verify-message').innerText = 'Email verified successfully! You can now log in.';
-      // Reset form inputs
+      document.getElementById('verify-message').className = 'message success';
+      document.getElementById('verify-button').disabled = true;
+
+      // Reset form
       document.getElementById('reg-name').value = '';
       document.getElementById('reg-email').value = '';
       document.getElementById('reg-password').value = '';
       document.getElementById('verification-code').value = '';
 
-      // Show login section after short delay
       setTimeout(() => {
         showLogin();
+        document.getElementById('verify-button').disabled = false;
       }, 2000);
     } else {
       document.getElementById('verify-message').innerText = 'Incorrect code. Please try again.';
+      document.getElementById('verify-message').className = 'message error';
     }
   }
 
@@ -165,12 +184,14 @@
     const password = document.getElementById('login-password').value.trim();
 
     if (!email || !password) {
-      alert('Please fill all fields.');
+      document.getElementById('login-message').innerText = 'Please fill all fields.';
+      document.getElementById('login-message').className = 'message error';
       return;
     }
 
-    // Dummy success action
+    // Dummy success
     document.getElementById('login-message').innerText = 'Login successful! Welcome back.';
+    document.getElementById('login-message').className = 'message success';
     document.getElementById('login-email').value = '';
     document.getElementById('login-password').value = '';
   }
