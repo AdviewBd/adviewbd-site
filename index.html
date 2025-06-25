@@ -1,101 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AdView BD - Register & Login</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-      background: #f9f9f9;
-      max-width: 400px;
-      margin: 40px auto;
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .form-section {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-    }
-    input[type="text"], input[type="email"], input[type="password"], input[type="number"] {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0 15px 0;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 1em;
-    }
-    button {
-      width: 100%;
-      background-color: #007bff;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      font-size: 1em;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    .toggle-link {
-      text-align: center;
-      margin-top: 15px;
-      cursor: pointer;
-      color: #007bff;
-      user-select: none;
-    }
-    .message {
-      text-align: center;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    .message.success {
-      color: green;
-    }
-    .message.error {
-      color: red;
-    }
-  </style>
-</head>
-<body>
-
-  <!-- Registration Section -->
-  <div id="register-section" class="form-section">
-    <h2>Register</h2>
-    <input type="text" id="reg-name" placeholder="Full Name" required />
-    <input type="email" id="reg-email" placeholder="Email" required />
-    <input type="password" id="reg-password" placeholder="Password (min 6 chars)" minlength="6" required />
-    <button onclick="startVerification()">Register</button>
-    <div class="toggle-link" onclick="showLogin()">Already have an account? Login here</div>
-    <div id="reg-message" class="message"></div>
-  </div>
-
-  <!-- Verification Code Section (hidden initially) -->
-  <div id="verification-section" class="form-section" style="display:none;">
-    <h2>Email Verification</h2>
-    <p>A verification code has been sent to your email.</p>
-    <input type="number" id="verification-code" placeholder="Enter verification code" required />
-    <button id="verify-button" onclick="verifyCode()">Verify</button>
-    <div id="verify-message" class="message"></div>
-  </div>
-
-  <!-- Login Section (hidden initially) -->
-  <div id="login-section" class="form-section" style="display:none;">
-    <h2>Login</h2>
-    <input type="email" id="login-email" placeholder="Email" required />
-    <input type="password" id="login-password" placeholder="Password" required />
-    <button onclick="login()">Login</button>
-    <div class="toggle-link" onclick="showRegister()">Don't have an account? Register here</div>
-    <div id="login-message" class="message"></div>
-  </div>
-
 <script>
   let verificationCode = null;
   let userEmail = '';
@@ -123,7 +25,7 @@
     document.getElementById('verify-message').className = 'message';
   }
 
-  function startVerification() {
+  async function startVerification() {
     const name = document.getElementById('reg-name').value.trim();
     userEmail = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value.trim();
@@ -140,13 +42,31 @@
       return;
     }
 
-    // Simulate sending verification code
-    verificationCode = Math.floor(100000 + Math.random() * 900000); // 6-digit code
-    console.log("Verification code sent to " + userEmail + ": " + verificationCode);
+    try {
+      const response = await fetch('http://localhost:3000/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email: userEmail, password })
+      });
+      const data = await response.json();
 
-    document.getElementById('register-section').style.display = 'none';
-    document.getElementById('verification-section').style.display = 'block';
-    clearMessages();
+      if (response.ok) {
+        // Simulate sending verification code after successful registration
+        verificationCode = Math.floor(100000 + Math.random() * 900000);
+        alert(`Verification code sent to ${userEmail}: ${verificationCode}`);
+
+        document.getElementById('register-section').style.display = 'none';
+        document.getElementById('verification-section').style.display = 'block';
+        clearMessages();
+      } else {
+        document.getElementById('reg-message').innerText = data.message || 'Registration failed.';
+        document.getElementById('reg-message').className = 'message error';
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      document.getElementById('reg-message').innerText = 'Error connecting to server.';
+      document.getElementById('reg-message').className = 'message error';
+    }
   }
 
   function verifyCode() {
@@ -179,7 +99,7 @@
     }
   }
 
-  function login() {
+  async function login() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value.trim();
 
@@ -189,13 +109,28 @@
       return;
     }
 
-    // Dummy success
-    document.getElementById('login-message').innerText = 'Login successful! Welcome back.';
-    document.getElementById('login-message').className = 'message success';
-    document.getElementById('login-email').value = '';
-    document.getElementById('login-password').value = '';
+    try {
+      const response = await fetch('http://localhost:3000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        document.getElementById('login-message').innerText = `Login successful! Welcome, ${data.name}.`;
+        document.getElementById('login-message').className = 'message success';
+        document.getElementById('login-email').value = '';
+        document.getElementById('login-password').value = '';
+        // TODO: You can redirect user or save token here
+      } else {
+        document.getElementById('login-message').innerText = data.message || 'Login failed.';
+        document.getElementById('login-message').className = 'message error';
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      document.getElementById('login-message').innerText = 'Error connecting to server.';
+      document.getElementById('login-message').className = 'message error';
+    }
   }
 </script>
-
-</body>
-</html>
