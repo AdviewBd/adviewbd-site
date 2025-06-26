@@ -97,7 +97,6 @@
   </div>
 
 <script>
-  let verificationCode = null;
   let userEmail = '';
 
   function showRegister() {
@@ -141,23 +140,20 @@
     }
 
     try {
-      const response = await fetch('https://adviewbd-backend.onrender.com/api/register', {
+      // Step 1: Send verification code to email via backend
+      const res = await fetch('https://adviewbd-backend.onrender.com/send-verification-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email: userEmail, password })
+        body: JSON.stringify({ email: userEmail })
       });
-      const data = await response.json();
+      const data = await res.json();
 
-      if (response.ok) {
-        // Simulate sending verification code after successful registration
-        verificationCode = Math.floor(100000 + Math.random() * 900000);
-        alert(`Verification code sent to ${userEmail}: ${verificationCode}`);
-
+      if (res.ok && data.success) {
         document.getElementById('register-section').style.display = 'none';
         document.getElementById('verification-section').style.display = 'block';
         clearMessages();
       } else {
-        document.getElementById('reg-message').innerText = data.message || 'Registration failed.';
+        document.getElementById('reg-message').innerText = data.message || 'Failed to send verification code.';
         document.getElementById('reg-message').className = 'message error';
       }
     } catch (error) {
@@ -167,7 +163,7 @@
     }
   }
 
-  function verifyCode() {
+  async function verifyCode() {
     const enteredCode = document.getElementById('verification-code').value.trim();
 
     if (enteredCode === '') {
@@ -176,23 +172,53 @@
       return;
     }
 
-    if (enteredCode == verificationCode) {
-      document.getElementById('verify-message').innerText = 'Email verified successfully! You can now log in.';
-      document.getElementById('verify-message').className = 'message success';
-      document.getElementById('verify-button').disabled = true;
+    try {
+      // Step 2: Verify code with backend
+      const res = await fetch('https://adviewbd-backend.onrender.com/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail, code: enteredCode })
+      });
+      const data = await res.json();
 
-      // Reset form
-      document.getElementById('reg-name').value = '';
-      document.getElementById('reg-email').value = '';
-      document.getElementById('reg-password').value = '';
-      document.getElementById('verification-code').value = '';
+      if (res.ok && data.success) {
+        // Step 3: Register user after verification success
+        const name = document.getElementById('reg-name').value.trim();
+        const password = document.getElementById('reg-password').value.trim();
 
-      setTimeout(() => {
-        showLogin();
-        document.getElementById('verify-button').disabled = false;
-      }, 2000);
-    } else {
-      document.getElementById('verify-message').innerText = 'Incorrect code. Please try again.';
+        const regRes = await fetch('https://adviewbd-backend.onrender.com/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email: userEmail, password })
+        });
+        const regData = await regRes.json();
+
+        if (regRes.ok) {
+          document.getElementById('verify-message').innerText = 'Registration successful! You can now log in.';
+          document.getElementById('verify-message').className = 'message success';
+          document.getElementById('verify-button').disabled = true;
+
+          // Clear input fields
+          document.getElementById('reg-name').value = '';
+          document.getElementById('reg-email').value = '';
+          document.getElementById('reg-password').value = '';
+          document.getElementById('verification-code').value = '';
+
+          setTimeout(() => {
+            showLogin();
+            document.getElementById('verify-button').disabled = false;
+          }, 2000);
+        } else {
+          document.getElementById('verify-message').innerText = regData.message || 'Registration failed.';
+          document.getElementById('verify-message').className = 'message error';
+        }
+      } else {
+        document.getElementById('verify-message').innerText = 'Incorrect verification code.';
+        document.getElementById('verify-message').className = 'message error';
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      document.getElementById('verify-message').innerText = 'Error verifying code.';
       document.getElementById('verify-message').className = 'message error';
     }
   }
@@ -208,19 +234,22 @@
     }
 
     try {
-      const response = await fetch('https://adviewbd-backend.onrender.com/api/login', {
+      const res = await fetch('https://adviewbd-backend.onrender.com/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      const data = await response.json();
+      const data = await res.json();
 
-      if (response.ok) {
-        document.getElementById('login-message').innerText = `Login successful! Welcome, ${data.name}.`;
+      if (res.ok) {
+        document.getElementById('login-message').innerText = 'Login successful!';
         document.getElementById('login-message').className = 'message success';
+
+        // Clear inputs
         document.getElementById('login-email').value = '';
         document.getElementById('login-password').value = '';
-        // TODO: You can redirect user or save token here
+
+        // TODO: Redirect or show logged-in UI here
       } else {
         document.getElementById('login-message').innerText = data.message || 'Login failed.';
         document.getElementById('login-message').className = 'message error';
@@ -231,6 +260,9 @@
       document.getElementById('login-message').className = 'message error';
     }
   }
+
+  // Start with register shown
+  showRegister();
 </script>
 
 </body>
