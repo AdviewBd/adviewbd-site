@@ -2,269 +2,157 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AdView BD - Register & Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AdView BD</title>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-      background: #f9f9f9;
-      max-width: 400px;
-      margin: 40px auto;
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .form-section {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-    }
-    input[type="text"], input[type="email"], input[type="password"], input[type="number"] {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0 15px 0;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 1em;
-    }
-    button {
-      width: 100%;
-      background-color: #007bff;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 6px;
-      font-size: 1em;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    .toggle-link {
-      text-align: center;
-      margin-top: 15px;
-      cursor: pointer;
-      color: #007bff;
-      user-select: none;
-    }
-    .message {
-      text-align: center;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    .message.success {
-      color: green;
-    }
-    .message.error {
-      color: red;
-    }
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; }
+    .hidden { display: none; }
+    input, button { display: block; margin: 10px 0; width: 100%; padding: 8px; }
+    .section { margin-top: 30px; }
   </style>
 </head>
 <body>
 
-  <!-- Registration Section -->
-  <div id="register-section" class="form-section">
+  <h1>AdView BD</h1>
+
+  <!-- Register Section -->
+  <div id="register-section" class="section">
     <h2>Register</h2>
-    <input type="text" id="reg-name" placeholder="Full Name" required />
-    <input type="email" id="reg-email" placeholder="Email" required />
-    <input type="password" id="reg-password" placeholder="Password (min 6 chars)" minlength="6" required />
-    <button onclick="startVerification()">Register</button>
-    <div class="toggle-link" onclick="showLogin()">Already have an account? Login here</div>
-    <div id="reg-message" class="message"></div>
+    <input type="text" id="reg-name" placeholder="Your Name" />
+    <input type="email" id="reg-email" placeholder="Email" />
+    <input type="password" id="reg-password" placeholder="Password" />
+    <button onclick="sendVerification()">Send Verification Code</button>
+    <div id="code-section" class="hidden">
+      <input type="text" id="verification-code" placeholder="Enter Code" />
+      <button onclick="verifyAndRegister()">Verify & Register</button>
+    </div>
   </div>
 
-  <!-- Verification Code Section (hidden initially) -->
-  <div id="verification-section" class="form-section" style="display:none;">
-    <h2>Email Verification</h2>
-    <p>A verification code has been sent to your email.</p>
-    <input type="number" id="verification-code" placeholder="Enter verification code" required />
-    <button id="verify-button" onclick="verifyCode()">Verify</button>
-    <div id="verify-message" class="message"></div>
-  </div>
-
-  <!-- Login Section (hidden initially) -->
-  <div id="login-section" class="form-section" style="display:none;">
+  <!-- Login Section -->
+  <div id="login-section" class="section">
     <h2>Login</h2>
-    <input type="email" id="login-email" placeholder="Email" required />
-    <input type="password" id="login-password" placeholder="Password" required />
+    <input type="email" id="login-email" placeholder="Email" />
+    <input type="password" id="login-password" placeholder="Password" />
     <button onclick="login()">Login</button>
-    <div class="toggle-link" onclick="showRegister()">Don't have an account? Register here</div>
-    <div id="login-message" class="message"></div>
   </div>
 
-<script>
-  let userEmail = '';
+  <!-- Dashboard -->
+  <div id="dashboard" class="hidden">
+    <h2>Welcome, <span id="username"></span>!</h2>
+    <p>Your referral link:</p>
+    <input id="ref-link" readonly />
+    <button onclick="copyReferral()">Copy Referral Link</button>
+    <p>Total referrals: <span id="referrals">3</span></p>
+    <p>Total earnings: ৳<span id="earnings">12</span></p>
+    <button onclick="alert('Ad watched! +৳1')">📺 Watch Ad to Earn</button>
+    <button onclick="logout()">Logout</button>
+  </div>
 
-  function showRegister() {
-    document.getElementById('register-section').style.display = 'block';
-    document.getElementById('login-section').style.display = 'none';
-    document.getElementById('verification-section').style.display = 'none';
-    clearMessages();
-  }
+  <script>
+    const api = 'https://adviewbd-backend.onrender.com';
+    let tempEmail = '', tempName = '', tempPass = '';
 
-  function showLogin() {
-    document.getElementById('register-section').style.display = 'none';
-    document.getElementById('login-section').style.display = 'block';
-    document.getElementById('verification-section').style.display = 'none';
-    clearMessages();
-  }
+    function sendVerification() {
+      const email = document.getElementById('reg-email').value;
+      if (!email) return alert('Email required');
 
-  function clearMessages() {
-    document.getElementById('reg-message').innerText = '';
-    document.getElementById('login-message').innerText = '';
-    document.getElementById('verify-message').innerText = '';
-    document.getElementById('reg-message').className = 'message';
-    document.getElementById('login-message').className = 'message';
-    document.getElementById('verify-message').className = 'message';
-  }
-
-  async function startVerification() {
-    const name = document.getElementById('reg-name').value.trim();
-    userEmail = document.getElementById('reg-email').value.trim();
-    const password = document.getElementById('reg-password').value.trim();
-
-    if (!name || !userEmail || !password) {
-      document.getElementById('reg-message').innerText = 'Please fill all fields.';
-      document.getElementById('reg-message').className = 'message error';
-      return;
-    }
-
-    if (password.length < 6) {
-      document.getElementById('reg-message').innerText = 'Password must be at least 6 characters.';
-      document.getElementById('reg-message').className = 'message error';
-      return;
-    }
-
-    try {
-      // Step 1: Send verification code to email via backend
-      const res = await fetch('https://adviewbd-backend.onrender.com/send-verification-code', {
+      fetch(api + '/send-verification-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: userEmail })
-      });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        document.getElementById('register-section').style.display = 'none';
-        document.getElementById('verification-section').style.display = 'block';
-        clearMessages();
-      } else {
-        document.getElementById('reg-message').innerText = data.message || 'Failed to send verification code.';
-        document.getElementById('reg-message').className = 'message error';
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      document.getElementById('reg-message').innerText = 'Error connecting to server.';
-      document.getElementById('reg-message').className = 'message error';
-    }
-  }
-
-  async function verifyCode() {
-    const enteredCode = document.getElementById('verification-code').value.trim();
-
-    if (enteredCode === '') {
-      document.getElementById('verify-message').innerText = 'Please enter the verification code.';
-      document.getElementById('verify-message').className = 'message error';
-      return;
-    }
-
-    try {
-      // Step 2: Verify code with backend
-      const res = await fetch('https://adviewbd-backend.onrender.com/verify-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: userEmail, code: enteredCode })
-      });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        // Step 3: Register user after verification success
-        const name = document.getElementById('reg-name').value.trim();
-        const password = document.getElementById('reg-password').value.trim();
-
-        const regRes = await fetch('https://adviewbd-backend.onrender.com/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email: userEmail, password })
-        });
-        const regData = await regRes.json();
-
-        if (regRes.ok) {
-          document.getElementById('verify-message').innerText = 'Registration successful! You can now log in.';
-          document.getElementById('verify-message').className = 'message success';
-          document.getElementById('verify-button').disabled = true;
-
-          // Clear input fields
-          document.getElementById('reg-name').value = '';
-          document.getElementById('reg-email').value = '';
-          document.getElementById('reg-password').value = '';
-          document.getElementById('verification-code').value = '';
-
-          setTimeout(() => {
-            showLogin();
-            document.getElementById('verify-button').disabled = false;
-          }, 2000);
+        body: JSON.stringify({ email })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert('Code sent! Check your email.');
+          document.getElementById('code-section').classList.remove('hidden');
+          tempEmail = email;
+          tempName = document.getElementById('reg-name').value;
+          tempPass = document.getElementById('reg-password').value;
         } else {
-          document.getElementById('verify-message').innerText = regData.message || 'Registration failed.';
-          document.getElementById('verify-message').className = 'message error';
+          alert(data.message || 'Error sending code');
         }
-      } else {
-        document.getElementById('verify-message').innerText = 'Incorrect verification code.';
-        document.getElementById('verify-message').className = 'message error';
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      document.getElementById('verify-message').innerText = 'Error verifying code.';
-      document.getElementById('verify-message').className = 'message error';
-    }
-  }
-
-  async function login() {
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value.trim();
-
-    if (!email || !password) {
-      document.getElementById('login-message').innerText = 'Please fill all fields.';
-      document.getElementById('login-message').className = 'message error';
-      return;
+      });
     }
 
-    try {
-      const res = await fetch('https://adviewbd-backend.onrender.com/api/login', {
+    function verifyAndRegister() {
+      const code = document.getElementById('verification-code').value;
+
+      fetch(api + '/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: tempEmail, code })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          registerUser();
+        } else {
+          alert('Invalid verification code');
+        }
+      });
+    }
+
+    function registerUser() {
+      fetch(api + '/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: tempName, email: tempEmail, password: tempPass })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message);
+      });
+    }
+
+    function login() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      fetch(api + '/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.message === 'Login successful') {
+          localStorage.setItem('user', JSON.stringify({ name: data.name, email }));
+          showDashboard(data.name, email);
+        } else {
+          alert(data.message);
+        }
       });
-      const data = await res.json();
-
-      if (res.ok) {
-        document.getElementById('login-message').innerText = 'Login successful!';
-        document.getElementById('login-message').className = 'message success';
-
-        // Clear inputs
-        document.getElementById('login-email').value = '';
-        document.getElementById('login-password').value = '';
-
-        // TODO: Redirect or show logged-in UI here
-      } else {
-        document.getElementById('login-message').innerText = data.message || 'Login failed.';
-        document.getElementById('login-message').className = 'message error';
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      document.getElementById('login-message').innerText = 'Error connecting to server.';
-      document.getElementById('login-message').className = 'message error';
     }
-  }
 
-  // Start with register shown
-  showRegister();
-</script>
+    function showDashboard(name, email) {
+      document.getElementById('register-section').classList.add('hidden');
+      document.getElementById('login-section').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      document.getElementById('username').innerText = name;
+      document.getElementById('ref-link').value = `https://adviewbd.com/ref/${btoa(email)}`;
+    }
+
+    function logout() {
+      localStorage.removeItem('user');
+      location.reload();
+    }
+
+    function copyReferral() {
+      const input = document.getElementById('ref-link');
+      input.select();
+      document.execCommand('copy');
+      alert('Referral link copied!');
+    }
+
+    // Auto-login if data in localStorage
+    window.onload = () => {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (user) {
+        showDashboard(user.name, user.email);
+      }
+    };
+  </script>
 
 </body>
 </html>
-
